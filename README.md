@@ -3,7 +3,7 @@
 **DON'T USE THIS CODE IN PRODUCTION**
 
 
-**Key management solution using DH-OPRF** for storing keys at designated servers(/delegators) to remove the need to store passwords on Client's end.
+**Key management solution using DH-OPRF** for storing keys at designated servers to remove the need to store passwords on Client's end.
 This approach enforces the separation of concerns between the Client and the Server/s; Client can't access the keys, Server can't access the data.
 
 Program steps:
