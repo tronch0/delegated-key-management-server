@@ -7,34 +7,22 @@ import (
 	"math/big"
 )
 
-/*
-	Delegator:
-	- Exp()  (util: string -> byte -> big.int)
-
-
-	Client:
-	- HashToGroup()
-	- Exp() - r & 1/r
-	- Inverse (from r to 1/r)
-
-*/
-
 // Warning: operations on big.Ints are not constant-time: do not use them
 // for cryptography unless you're sure this is not an issue.
 
 var (
-	// y^2 = x^3-3x+41058363725152142129326129780047268409114441015993725554835256314039467401291
+	// y² = x³ - 3x +41058363725152142129326129780047268409114441015993725554835256314039467401291
 	c = elliptic.P256()
 )
 
-func Exp(x, y *big.Int, k []byte) (newX, newY *big.Int) {
-	newX, newY = c.ScalarMult(x, y, k)
+func Mul(x, y, scalar *big.Int) (newX, newY *big.Int) {
+	newX, newY = c.ScalarMult(x, y, scalar.Bytes())
 	return
 }
 
-func InverseK(x, y *big.Int, k *big.Int) (newX, newY *big.Int) {
+func MulWithInverseK(x, y *big.Int, k *big.Int) (newX, newY *big.Int) {
 	inverse := fermatInverse(k, c.Params().N)
-	return Exp(x, y, inverse.Bytes())
+	return Mul(x, y, inverse)
 }
 
 func CalculateInverse(k *big.Int) (kInverse *big.Int) {

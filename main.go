@@ -4,32 +4,47 @@ import (
 	"../key-management-delegated-keys/client"
 	"../key-management-delegated-keys/crypto"
 	"../key-management-delegated-keys/server"
+
 	"fmt"
-	"log"
 )
 
 func main() {
 
-	data := "“Privacy is not something that I’m merely entitled to, it’s an absolute prerequisite.” -M.B"
-	dataB := []byte(data)
+	fmt.Println("Creating Client and two Servers...")
+	client := createClient()
+	serverA := createServer()
+	serverB := createServer()
 
-	c, err := client.New()
-	if err != nil {
-		log.Fatal("error on client ctor")
-	}
+	password := "“Privacy is not something that I’m merely entitled to, it’s an absolute prerequisite.” -M.B"
+	passwordB := []byte(password)
+	fmt.Printf("Client password: %s\n", password)
 
-	clientX, clientY := c.Hide(dataB)
+	fmt.Println("Client hide his commitment to password (Client hash-to-curve then exponentiate to one time encryption key")
+	xWithClientSecret, yWithClientSecret := client.Hide(passwordB)
 
+	fmt.Println("Servers A and B applying their keys to the output of the client")
+	xWithClientAndFirstServerSecrets, yWithClientAndFirstServerSecrets := serverA.ApplyKey(xWithClientSecret, yWithClientSecret)
+	xWithClientAndBothServersSecrets, yWithClientAndBothServersSecrets := serverB.ApplyKey(xWithClientAndFirstServerSecrets, yWithClientAndFirstServerSecrets)
+
+	fmt.Println("Client unhide his commitment (Client exponentiate to the inverse of his initial one time encryption key")
+	xWithServersSecrets, yWithServersSecrets := client.Unhide(xWithClientAndBothServersSecrets, yWithClientAndBothServersSecrets)
+
+	fmt.Printf("\n Result:\n\tx-%x \n\ty-%x \n", xWithServersSecrets, yWithServersSecrets)
+}
+
+func createServer() *server.Server {
 	serverSk, err := crypto.GenerateR()
 	if err != nil {
-		log.Fatal("error on crypto.GenerateR()")
+		panic("error on crypto.GenerateR()")
+	}
+	return server.New(serverSk)
+}
+
+func createClient() *client.Client {
+	c, err := client.New()
+	if err != nil {
+		panic("error on client ctor")
 	}
 
-	s := server.New(serverSk)
-
-	xWithServerKey, yWithServerKey := s.ApplyKey(clientX, clientY)
-
-	x, y := c.Unhide(xWithServerKey, yWithServerKey)
-
-	fmt.Printf("\n x: %x \n y: %x \n", x, y)
+	return c
 }

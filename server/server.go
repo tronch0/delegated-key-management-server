@@ -14,5 +14,5 @@ func New(sk *big.Int) *Server {
 }
 
 func (s *Server) ApplyKey(x, y *big.Int) (newX *big.Int, newY *big.Int) {
-	return crypto.Exp(x, y, s.sk.Bytes())
+	return crypto.Mul(x, y, s.sk.Bytes())
 }
